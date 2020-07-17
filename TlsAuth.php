@@ -5,7 +5,7 @@
  * Date: 2018/04/25
  * Time: 15:15
  */
-namespace tlsauth;
+namespace TlsAuth;
 
 
 class TlsAuth
