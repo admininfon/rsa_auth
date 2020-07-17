@@ -20,6 +20,11 @@ class TlsAuth
     // 加密方法
     private $md_method = 'sha256';
 
+    /**
+     * TlsAuth constructor.
+     *
+     * @param array $config [optional] 配置参数
+     */
     public function __construct($config = array())
     {
         if (!extension_loaded('openssl')) {
@@ -37,13 +42,14 @@ class TlsAuth
         if (!empty($config['private_key'])) {
             $result = $this->setPrivateKey($config['private_key']);
             if (!$result['status']) {
-                return $result;
+                trigger_error($result['msg'], E_USER_ERROR);
             }
         }
+
         if (!empty($config['public_key'])) {
             $result = $this->setPublicKey($config['public_key']);
             if (!$result['status']) {
-                return $result;
+                trigger_error($result['msg'], E_USER_ERROR);
             }
         }
     }
@@ -151,6 +157,41 @@ class TlsAuth
     }
 
     /**
+     * 生成签名内容
+     *
+     * @author kangkst <kst157521@163.com>
+     * @since 1.0.0
+     * @date 2018-03-20 16:08:27
+     * @param array $data
+     * @return array
+     */
+    private function genSignContent($data = array())
+    {
+        static $members = ['data', 'expire_after', 'time'];
+        $content = [];
+        foreach ($members as $member) {
+            if (!isset($data[$member])) {
+                $this->res['status'] = false;
+                $this->res['msg'] = 'json need ' . $member;
+                $this->res['data'] = null;
+                return $this->res;
+            }
+            $content[$member] = $data[$member];
+        }
+
+        if (empty($content)) {
+            $this->res['status'] = false;
+            $this->res['msg'] = 'Not Defined';
+            $this->res['data'] = null;
+        } else {
+            $this->res['status'] = true;
+            $this->res['msg'] = 'successful';
+            $this->res['data'] = json_encode($content);
+        }
+        return $this->res;
+    }
+
+    /**
      * 数据加密
      *
      * @author kangkst <kst157521@163.com>
@@ -213,41 +254,8 @@ class TlsAuth
     }
 
     /**
-     * 生成签名内容
+     * 生成加密数据
      *
-     * @author kangkst <kst157521@163.com>
-     * @since 1.0.0
-     * @date 2018-03-20 16:08:27
-     * @param array $data
-     * @return array
-     */
-    private function genSignContent($data = array())
-    {
-        static $members = ['data', 'expire_after', 'time'];
-        $content = [];
-        foreach ($members as $member) {
-            if (!isset($data[$member])) {
-                $this->res['status'] = false;
-                $this->res['msg'] = 'json need ' . $member;
-                $this->res['data'] = null;
-                return $this->res;
-            }
-            $content[$member] = $data[$member];
-        }
-
-        if (empty($content)) {
-            $this->res['status'] = false;
-            $this->res['msg'] = 'Not Defined';
-            $this->res['data'] = null;
-        } else {
-            $this->res['status'] = true;
-            $this->res['msg'] = 'successful';
-            $this->res['data'] = json_encode($content);
-        }
-        return $this->res;
-    }
-
-    /**
      * @author kangkst <kst157521@163.com>
      * @since 1.0.0
      * @date 2018-03-20 16:18:57
